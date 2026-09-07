@@ -201,9 +201,30 @@
   @media (prefers-reduced-motion:reduce){
     *{ transition:none !important; animation:none !important; }
   }
+
+  .gate-overlay{ position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; padding:24px; z-index:50; }
+  .gate{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:32px 28px; text-align:center; max-width:360px; width:100%; box-shadow:var(--shadow); }
+  .gate h1{ font-size:1.4rem; font-weight:500; margin-bottom:10px; }
+  .gate p{ color:var(--ink-soft); font-size:0.9rem; margin:0 0 20px; }
+  .gate form{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .gate input[type="password"]{ font-family:inherit; font-size:0.95rem; padding:10px 14px; border-radius:8px; border:1px solid var(--line-strong); background:var(--surface); color:var(--ink); flex:1; min-width:160px; }
+  .gate-error{ color:#b5533f; font-size:0.85rem; margin-top:14px; min-height:1.2em; }
+  :root[data-theme="dark"] .gate-error, @media (prefers-color-scheme:dark){ .gate-error{ color:#e0917f; } }
 </style>
 
-<div class="wrap">
+<div class="gate-overlay" id="gate-overlay">
+  <div class="gate">
+    <h1>Steady Ground is locked</h1>
+    <p>Enter your passcode to open the journal.</p>
+    <form id="gate-form">
+      <input type="password" id="gate-input" placeholder="Passcode" autocomplete="off">
+      <button class="btn btn-primary" type="submit" id="gate-submit">Unlock</button>
+    </form>
+    <div class="gate-error" id="gate-error"></div>
+  </div>
+</div>
+
+<div class="wrap" id="app-content" hidden>
 
   <header class="top">
     <div class="brand">
@@ -347,9 +368,14 @@
   };
 
   // ---- server persistence (replaces the old localStorage-only version) ----
+  // Every request carries the app passcode (set once the gate below is
+  // passed); the server checks it on every /api/* route except /shared.
+  var appPasscode = '';
+  var GATE_SESSION_KEY = 'steady-ground-app-passcode';
+
   async function loadState(){
-    var res = await fetch('/api/state');
-    if (!res.ok) throw new Error('bad response: ' + res.status);
+    var res = await fetch('/api/state', { headers: { 'X-Passcode': appPasscode } });
+    if (!res.ok) throw errorFromStatus(res.status);
     var data = await res.json();
     if (data.settings && data.settings.relationshipStart) state.settings.relationshipStart = data.settings.relationshipStart;
     if (data.settings && data.settings.separationDate) state.settings.separationDate = data.settings.separationDate;
@@ -358,18 +384,23 @@
   async function saveEntryToServer(date, entry){
     var res = await fetch('/api/entries/' + encodeURIComponent(date), {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Passcode': appPasscode },
       body: JSON.stringify(entry)
     });
-    if (!res.ok) throw new Error('save failed: ' + res.status);
+    if (!res.ok) throw errorFromStatus(res.status);
   }
   async function saveSettingsToServer(settings){
     var res = await fetch('/api/settings', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Passcode': appPasscode },
       body: JSON.stringify(settings)
     });
-    if (!res.ok) throw new Error('save failed: ' + res.status);
+    if (!res.ok) throw errorFromStatus(res.status);
+  }
+  function errorFromStatus(status){
+    var err = new Error('request failed: ' + status);
+    err.status = status;
+    return err;
   }
 
   var EMOTIONS = ['Joy','Calm','Hope','Gratitude','Sadness','Loneliness','Anger','Anxiety','Numbness','Relief'];
@@ -419,7 +450,13 @@
     timeline: $('timeline'),
     pager: $('pager'),
     searchBox: $('search-box'),
-    toast: $('toast')
+    toast: $('toast'),
+    gateOverlay: $('gate-overlay'),
+    appContent: $('app-content'),
+    gateForm: $('gate-form'),
+    gateInput: $('gate-input'),
+    gateSubmit: $('gate-submit'),
+    gateError: $('gate-error')
   };
 
   // build emotion chips
@@ -720,20 +757,54 @@
   els.searchBox.addEventListener('input', function(){ currentPage = 1; renderTimeline(); });
 
   els.backfillDate.max = todayISO();
+  loadEntryIntoForm(todayISO());
 
-  (async function init(){
-    loadEntryIntoForm(todayISO());
-    try{
-      await loadState();
-      els.connStatus.textContent = 'Connected';
-      els.connStatus.classList.remove('err');
-    }catch(e){
-      els.connStatus.textContent = "Can't reach the database — check the server is running.";
-      els.connStatus.classList.add('err');
-    }
+  async function startApp(){
+    els.gateOverlay.hidden = true;
+    els.appContent.hidden = false;
+    els.connStatus.textContent = 'Connected';
+    els.connStatus.classList.remove('err');
     loadEntryIntoForm(currentDate);
     renderStats();
     renderTimeline();
+  }
+
+  async function tryUnlock(passcode, remember){
+    els.gateSubmit.disabled = true;
+    els.gateError.textContent = '';
+    appPasscode = passcode;
+    try{
+      await loadState();
+    }catch(e){
+      els.gateSubmit.disabled = false;
+      appPasscode = '';
+      if (e.status === 401){
+        els.gateError.textContent = "That passcode isn't right — try again.";
+      } else {
+        els.gateError.textContent = "Couldn't reach the server or database right now.";
+      }
+      try{ sessionStorage.removeItem(GATE_SESSION_KEY); }catch(err){}
+      return;
+    }
+    if (remember){
+      try{ sessionStorage.setItem(GATE_SESSION_KEY, passcode); }catch(e){ /* private browsing or blocked — fine, just re-ask next time */ }
+    }
+    startApp();
+  }
+
+  els.gateForm.addEventListener('submit', function(ev){
+    ev.preventDefault();
+    var passcode = els.gateInput.value;
+    if (!passcode) return;
+    tryUnlock(passcode, true);
+  });
+
+  // If this browser already unlocked the app earlier this session, skip
+  // straight past the gate.
+  (function(){
+    var saved;
+    try{ saved = sessionStorage.getItem(GATE_SESSION_KEY); }catch(e){ saved = null; }
+    if (saved) tryUnlock(saved, false);
   })();
 })();
 </script>

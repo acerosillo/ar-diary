@@ -1,12 +1,12 @@
 // Runs on Netlify as a serverless function. Netlify has no persistent Node
 // server to run server.js on — this is the API for the deployed site.
-// netlify.toml redirects /api/* here, so set TURSO_DATABASE_URL and
-// TURSO_AUTH_TOKEN in the Netlify site's environment variables (Site
-// settings -> Environment variables), not in a .env file — that file never
-// gets deployed. The local-file database fallback in lib/api-app.js only
-// works for `npm start` on your own machine; Netlify functions don't keep
-// a disk between calls, so without those two variables set, entries would
-// silently fail to persist.
+// netlify.toml redirects /api/* here, so set TURSO_DATABASE_URL,
+// TURSO_AUTH_TOKEN, APP_PASSCODE and SHARED_PASSCODE in the Netlify site's
+// environment variables (Site settings -> Environment variables), not in a
+// .env file — that file never gets deployed. The local-file database
+// fallback in lib/api-app.js only works for `npm start` on your own
+// machine; Netlify functions don't keep a disk between calls, so without
+// the Turso variables set, entries would silently fail to persist.
 const serverless = require('serverless-http');
 const { makeDb, initDb, createApiApp } = require('../../lib/api-app');
 
