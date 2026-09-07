@@ -24,9 +24,14 @@ function ensureDb() {
 
 exports.handler = async (event, context) => {
   await ensureDb();
-  // netlify.toml sends requests here as /.netlify/functions/api/<rest>;
-  // the routes in lib/api-app.js expect just /<rest> (e.g. "/state"),
-  // so strip the function's own path prefix before handing off.
-  event.path = event.path.replace(/^\/\.netlify\/functions\/api/, '') || '/';
+  // The routes in lib/api-app.js expect just /<rest> (e.g. "/state"), but
+  // what prefix arrives in event.path depends on how the request got here:
+  //  - via the netlify.toml redirect from /api/*, Netlify keeps the
+  //    ORIGINAL request path, i.e. "/api/state"
+  //  - hit directly at its own function URL, it's "/.netlify/functions/api/state"
+  // Strip whichever one is actually present.
+  event.path = event.path
+    .replace(/^\/\.netlify\/functions\/api/, '')
+    .replace(/^\/api/, '') || '/';
   return asServerless(event, context);
 };
