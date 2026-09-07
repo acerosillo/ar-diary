@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Acefully Present</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
@@ -96,7 +101,7 @@
   .ledger .stat:first-child{ border-left:none; }
   .ledger .stat .num{ font-size:1.15rem; font-weight:500; }
   .ledger .stat .lbl{ font-size:0.68rem; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.06em; margin-top:2px; }
-  .ledger-edit-row{ display:flex; justify-content:space-between; align-items:center; }
+  .ledger-edit-row{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px 16px; }
   .conn-status{ font-size:0.76rem; color:var(--ink-faint); }
   .conn-status.err{ color:#b5533f; }
   :root[data-theme="dark"] .conn-status.err, @media (prefers-color-scheme:dark){ .conn-status.err{ color:#e0917f; } }
@@ -181,7 +186,7 @@
   .t-actions{ display:flex; gap:8px; margin-top:10px; }
   .t-actions .btn{ padding:6px 12px; font-size:0.78rem; }
 
-  .pager{ display:flex; justify-content:center; align-items:center; gap:16px; margin-top:18px; }
+  .pager{ display:flex; justify-content:center; align-items:center; gap:10px 16px; margin-top:18px; flex-wrap:wrap; }
   .pager .mono{ font-size:0.8rem; color:var(--ink-faint); }
   .pager button{ font-family:inherit; font-size:0.85rem; font-weight:600; color:var(--ink); background:transparent; border:1px solid var(--line-strong); border-radius:8px; padding:7px 14px; cursor:pointer; }
   .pager button:hover:not(:disabled){ border-color:var(--ink-soft); }
@@ -212,6 +217,8 @@
   .gate-error{ color:#b5533f; font-size:0.85rem; margin-top:14px; min-height:1.2em; }
   :root[data-theme="dark"] .gate-error, @media (prefers-color-scheme:dark){ .gate-error{ color:#e0917f; } }
 </style>
+</head>
+<body>
 
 <div class="gate-overlay" id="gate-overlay">
   <div class="gate">
@@ -809,3 +816,5 @@
   })();
 })();
 </script>
+</body>
+</html>
