@@ -1,0 +1,851 @@
+<title>Steady Ground</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg: #eef1ee;
+    --surface: #ffffff;
+    --surface-2: #f5f6f3;
+    --ink: #202623;
+    --ink-soft: #5b655f;
+    --ink-faint: #8b948e;
+    --line: #dde1dc;
+    --line-strong: #c7ccc5;
+    --accent: #3f6e63;
+    --accent-deep: #294a41;
+    --accent-soft: #d9e6e0;
+    --accent-ink: #ffffff;
+    --mood-1: #dbe8e2;
+    --mood-2: #aecdc0;
+    --mood-3: #7bab99;
+    --mood-4: #3f6e63;
+    --mood-5: #22423a;
+    --shadow: 0 1px 2px rgba(32,38,35,0.06), 0 8px 24px -12px rgba(32,38,35,0.18);
+    --focus: 0 0 0 3px rgba(63,110,99,0.35);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #14181a;
+      --surface: #1b2124;
+      --surface-2: #20272a;
+      --ink: #e7ece9;
+      --ink-soft: #a2ada6;
+      --ink-faint: #6d7873;
+      --line: #2b3335;
+      --line-strong: #3a4345;
+      --accent: #6ba896;
+      --accent-deep: #8fc4b2;
+      --accent-soft: #24352f;
+      --accent-ink: #0f1513;
+      --mood-1: #232d29;
+      --mood-2: #32463d;
+      --mood-3: #446f60;
+      --mood-4: #6ba896;
+      --mood-5: #a3d8c4;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+      --focus: 0 0 0 3px rgba(107,168,150,0.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #14181a;
+    --surface: #1b2124;
+    --surface-2: #20272a;
+    --ink: #e7ece9;
+    --ink-soft: #a2ada6;
+    --ink-faint: #6d7873;
+    --line: #2b3335;
+    --line-strong: #3a4345;
+    --accent: #6ba896;
+    --accent-deep: #8fc4b2;
+    --accent-soft: #24352f;
+    --accent-ink: #0f1513;
+    --mood-1: #232d29;
+    --mood-2: #32463d;
+    --mood-3: #446f60;
+    --mood-4: #6ba896;
+    --mood-5: #a3d8c4;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    --focus: 0 0 0 3px rgba(107,168,150,0.4);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--accent-soft); }
+  :focus-visible{ outline:none; box-shadow:var(--focus); border-radius:4px; }
+
+  h1,h2,h3{ font-family:'Fraunces', Georgia, serif; text-wrap:balance; margin:0; }
+  .serif-italic{ font-family:'Fraunces', Georgia, serif; font-style:italic; }
+  .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric:tabular-nums; }
+
+  .wrap{ max-width:760px; margin:0 auto; padding:40px 24px 80px; }
+
+  /* header */
+  header.top{ display:flex; flex-direction:column; gap:22px; margin-bottom:36px; }
+  .brand{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .brand h1{ font-size:2rem; font-weight:500; color:var(--ink); }
+  .brand .tag{ font-size:0.8rem; color:var(--ink-faint); letter-spacing:0.04em; text-transform:uppercase; }
+
+  .ledger{ display:grid; grid-template-columns:repeat(4,1fr); border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--surface); }
+  .ledger .stat{ padding:14px 12px; text-align:center; border-left:1px solid var(--line); }
+  .ledger .stat:first-child{ border-left:none; }
+  .ledger .stat .num{ font-size:1.15rem; font-weight:500; }
+  .ledger .stat .lbl{ font-size:0.68rem; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.06em; margin-top:2px; }
+  .ledger-edit-row{ display:flex; justify-content:space-between; align-items:center; }
+  .conn-status{ font-size:0.76rem; color:var(--ink-faint); }
+  .conn-status.err{ color:#b5533f; }
+  :root[data-theme="dark"] .conn-status.err, @media (prefers-color-scheme:dark){ .conn-status.err{ color:#e0917f; } }
+  .link-btn{ background:none; border:none; color:var(--ink-soft); font-size:0.78rem; cursor:pointer; padding:4px 2px; text-decoration:underline; text-underline-offset:3px; font-family:inherit; }
+  .link-btn:hover{ color:var(--ink); }
+  .settings-panel{ display:none; gap:12px; background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-top:-6px; flex-wrap:wrap; align-items:flex-end; }
+  .settings-panel.open{ display:flex; }
+  .field{ display:flex; flex-direction:column; gap:4px; }
+  .field label{ font-size:0.72rem; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.05em; }
+  input[type="date"], input[type="text"], textarea{
+    font-family:inherit; font-size:0.9rem; color:var(--ink); background:var(--surface);
+    border:1px solid var(--line-strong); border-radius:7px; padding:8px 10px;
+  }
+
+  /* cards */
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:24px; box-shadow:var(--shadow); }
+  section{ margin-bottom:40px; }
+  section > h2{ font-size:1.1rem; font-weight:500; margin-bottom:14px; }
+
+  .entry-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:4px; flex-wrap:wrap; }
+  .entry-date{ font-size:1.35rem; font-weight:400; }
+  .prompt{ color:var(--ink-soft); font-size:0.95rem; margin:6px 0 20px; max-width:52ch; }
+
+  .mood-block{ margin-bottom:20px; }
+  .mood-block > .q{ font-size:0.85rem; color:var(--ink-soft); margin-bottom:10px; }
+  .mood-scale{ display:flex; gap:8px; align-items:center; }
+  .mood-dot{ flex:1; height:40px; border-radius:8px; border:1px solid var(--line-strong); cursor:pointer; position:relative; transition:transform .12s ease; }
+  .mood-dot:hover{ transform:translateY(-2px); }
+  .mood-dot[data-lvl="1"]{ background:var(--mood-1); }
+  .mood-dot[data-lvl="2"]{ background:var(--mood-2); }
+  .mood-dot[data-lvl="3"]{ background:var(--mood-3); }
+  .mood-dot[data-lvl="4"]{ background:var(--mood-4); }
+  .mood-dot[data-lvl="5"]{ background:var(--mood-5); }
+  .mood-dot.selected{ border-color:var(--ink); box-shadow:0 0 0 2px var(--surface), 0 0 0 3px var(--ink); }
+  .mood-labels{ display:flex; justify-content:space-between; font-size:0.72rem; color:var(--ink-faint); margin-top:6px; }
+  .mood-current{ font-size:0.82rem; color:var(--ink-soft); margin-top:8px; min-height:1.2em; }
+  .mood-current b{ color:var(--ink); font-weight:600; }
+
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+  .chip{ border:1px solid var(--line-strong); background:var(--surface); color:var(--ink-soft); font-size:0.82rem; padding:6px 12px; border-radius:999px; cursor:pointer; font-family:inherit; }
+  .chip.selected{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent-deep); font-weight:500; }
+  :root[data-theme="dark"] .chip.selected, @media (prefers-color-scheme:dark){ .chip.selected{ color:var(--accent-deep); } }
+
+  textarea.entry-text{ width:100%; min-height:140px; resize:vertical; font-size:0.98rem; line-height:1.6; margin-bottom:14px; }
+  .helped-field{ margin-bottom:20px; }
+  .helped-field label{ display:block; font-size:0.82rem; color:var(--ink-soft); margin-bottom:6px; }
+  .helped-field input{ width:100%; }
+
+  .entry-actions{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .btn{ font-family:inherit; font-size:0.9rem; font-weight:600; border-radius:8px; padding:10px 18px; cursor:pointer; border:1px solid transparent; }
+  .btn-primary{ background:var(--accent); color:var(--accent-ink); }
+  .btn-primary:hover{ background:var(--accent-deep); }
+  .btn-ghost{ background:transparent; border-color:var(--line-strong); color:var(--ink); }
+  .btn-ghost:hover{ border-color:var(--ink-soft); }
+  .btn:disabled{ opacity:0.45; cursor:not-allowed; }
+
+  .backfill-row{ margin-top:16px; padding-top:16px; border-top:1px dashed var(--line); font-size:0.85rem; color:var(--ink-soft); display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+
+  /* chart */
+  .chart-panel{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:20px 24px 12px; }
+  .chart-empty{ color:var(--ink-faint); font-size:0.9rem; padding:30px 4px; text-align:center; }
+  svg.chart{ width:100%; height:auto; display:block; overflow:visible; }
+  .chart-grid-line{ stroke:var(--line); stroke-width:1; }
+  .chart-axis-label{ fill:var(--ink-faint); font-size:11px; font-family:'IBM Plex Mono', monospace; }
+  .chart-line{ fill:none; stroke:var(--accent); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .chart-area{ fill:var(--accent); opacity:0.08; }
+  .chart-dot{ fill:var(--surface); stroke:var(--accent); stroke-width:2; }
+  .chart-dot.hot{ fill:var(--accent); }
+  .chart-hover-line{ stroke:var(--ink-faint); stroke-width:1; stroke-dasharray:3 3; opacity:0; }
+  .tooltip{ position:absolute; pointer-events:none; background:var(--ink); color:var(--bg); font-size:0.78rem; padding:8px 10px; border-radius:8px; max-width:220px; opacity:0; transform:translate(-50%,-115%); transition:opacity .1s; z-index:5; line-height:1.45; }
+  :root[data-theme="dark"] .tooltip, @media (prefers-color-scheme:dark){ .tooltip{ background:var(--surface-2); color:var(--ink); border:1px solid var(--line-strong); } }
+  .chart-wrap{ position:relative; }
+
+  /* timeline */
+  .search-row{ margin-bottom:14px; }
+  .search-row input{ width:100%; }
+  .timeline-empty{ color:var(--ink-faint); font-size:0.9rem; padding:20px 4px; border:1px dashed var(--line); border-radius:10px; text-align:center; }
+  .t-entry{ display:flex; gap:14px; padding:14px 4px; border-bottom:1px solid var(--line); cursor:pointer; }
+  .t-entry:last-child{ border-bottom:none; }
+  .t-bar{ width:4px; border-radius:3px; flex-shrink:0; }
+  .t-body{ flex:1; min-width:0; }
+  .t-top{ display:flex; justify-content:space-between; gap:10px; align-items:baseline; flex-wrap:wrap; }
+  .t-date{ font-size:0.85rem; font-weight:600; }
+  .t-mood{ font-size:0.76rem; color:var(--ink-faint); }
+  .t-tags{ font-size:0.76rem; color:var(--accent-deep); margin-top:2px; }
+  .t-preview{ font-size:0.88rem; color:var(--ink-soft); margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .t-full{ display:none; margin-top:10px; font-size:0.92rem; line-height:1.65; white-space:pre-wrap; }
+  .t-entry.open .t-full{ display:block; }
+  .t-entry.open .t-preview{ display:none; }
+  .t-helped{ margin-top:8px; font-size:0.85rem; color:var(--ink-soft); }
+  .t-actions{ display:flex; gap:8px; margin-top:10px; }
+  .t-actions .btn{ padding:6px 12px; font-size:0.78rem; }
+
+  footer{ margin-top:56px; padding-top:20px; border-top:1px solid var(--line); font-size:0.78rem; color:var(--ink-faint); display:flex; flex-direction:column; gap:6px; }
+
+  .toast{ position:fixed; left:50%; bottom:28px; transform:translate(-50%,12px); background:var(--ink); color:var(--bg); padding:10px 18px; border-radius:999px; font-size:0.85rem; opacity:0; transition:opacity .18s, transform .18s; pointer-events:none; z-index:20; max-width:min(420px, calc(100vw - 40px)); text-align:center; }
+  .toast.show{ opacity:1; transform:translate(-50%,0); }
+
+  @media (max-width:520px){
+    .ledger{ grid-template-columns:repeat(2,1fr); }
+    .ledger .stat:nth-child(3){ border-left:none; }
+    .ledger .stat:nth-child(3), .ledger .stat:nth-child(4){ border-top:1px solid var(--line); }
+    .mood-dot{ height:34px; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{ transition:none !important; animation:none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <h1>Steady Ground</h1>
+      <div class="tag">saved to your journal database</div>
+    </div>
+
+    <div class="ledger" id="ledger">
+      <div class="stat"><div class="num mono" id="stat-together">—</div><div class="lbl">Together</div></div>
+      <div class="stat"><div class="num mono" id="stat-apart">—</div><div class="lbl">Since separation</div></div>
+      <div class="stat"><div class="num mono" id="stat-entries">0</div><div class="lbl">Entries</div></div>
+      <div class="stat"><div class="num mono" id="stat-streak">0</div><div class="lbl">Day streak</div></div>
+    </div>
+    <div class="ledger-edit-row">
+      <span class="conn-status" id="conn-status">Connecting…</span>
+      <button class="link-btn" id="toggle-settings" type="button">Edit dates</button>
+    </div>
+    <div class="settings-panel" id="settings-panel">
+      <div class="field">
+        <label for="in-rel-start">Together since</label>
+        <input type="date" id="in-rel-start">
+      </div>
+      <div class="field">
+        <label for="in-sep-date">Separated on</label>
+        <input type="date" id="in-sep-date">
+      </div>
+      <button class="btn btn-primary" id="save-settings" type="button">Save</button>
+      <button class="btn btn-ghost" id="cancel-settings" type="button">Cancel</button>
+    </div>
+  </header>
+
+  <section>
+    <div class="card">
+      <div class="entry-head">
+        <div>
+          <div class="entry-date serif-italic" id="entry-date-display">—</div>
+        </div>
+      </div>
+      <p class="prompt" id="entry-prompt"></p>
+
+      <div class="mood-block">
+        <div class="q">How heavy did today feel?</div>
+        <div class="mood-scale" id="mood-scale">
+          <button class="mood-dot" data-lvl="1" type="button" aria-label="Light"></button>
+          <button class="mood-dot" data-lvl="2" type="button" aria-label="Manageable"></button>
+          <button class="mood-dot" data-lvl="3" type="button" aria-label="Mixed"></button>
+          <button class="mood-dot" data-lvl="4" type="button" aria-label="Heavy"></button>
+          <button class="mood-dot" data-lvl="5" type="button" aria-label="Overwhelming"></button>
+        </div>
+        <div class="mood-labels"><span>Light</span><span>Overwhelming</span></div>
+        <div class="mood-current" id="mood-current"></div>
+      </div>
+
+      <div class="chips" id="emotion-chips"></div>
+
+      <textarea class="entry-text" id="entry-text" placeholder="Write whatever's true right now..."></textarea>
+
+      <div class="helped-field">
+        <label for="entry-helped">One thing that helped today (optional)</label>
+        <input type="text" id="entry-helped" placeholder="A walk, a song, a call with a friend...">
+      </div>
+
+      <div class="entry-actions">
+        <button class="btn btn-primary" id="save-entry" type="button">Save entry</button>
+        <button class="btn btn-ghost" id="copy-entry" type="button" style="display:none;">Copy to share</button>
+        <span class="mono" id="save-hint" style="font-size:0.78rem;color:var(--ink-faint);"></span>
+      </div>
+
+      <div class="backfill-row">
+        <span>Filling in an earlier day?</span>
+        <input type="date" id="backfill-date">
+        <button class="link-btn" id="backfill-go" type="button">Open that day</button>
+        <button class="link-btn" id="backfill-today" type="button" style="display:none;">Back to today</button>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Your last 30 days</h2>
+    <div class="chart-panel">
+      <div class="chart-wrap" id="chart-wrap">
+        <div class="chart-empty" id="chart-empty">Your trend will appear here once you've journaled a few days.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Entries</h2>
+    <div class="search-row">
+      <input type="text" id="search-box" placeholder="Search your entries...">
+    </div>
+    <div id="timeline"></div>
+  </section>
+
+  <footer>
+    <div>Entries are saved to the database this app is connected to (Turso, or a local file while you're testing) — not to this browser. Nothing is shared beyond that unless you tap "Copy to share."</div>
+    <div>If it ever feels like too much to hold alone, a therapist or someone you trust can help carry it.</div>
+  </footer>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  function pad(n){ return n<10 ? '0'+n : ''+n; }
+  function isoDate(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function parseISO(iso){ var p=iso.split('-').map(Number); return new Date(p[0], p[1]-1, p[2]); }
+  function todayISO(){ return isoDate(new Date()); }
+  function addDays(iso, n){ var d=parseISO(iso); d.setDate(d.getDate()+n); return isoDate(d); }
+  function displayDate(iso){
+    var d = parseISO(iso);
+    return d.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+  }
+
+  function monthsBetween(aISO, bISO){
+    // returns {years, months, days} elapsed from a to b (b >= a)
+    var a = parseISO(aISO), b = parseISO(bISO);
+    if (b < a) return {years:0, months:0, days:0};
+    var years = b.getFullYear()-a.getFullYear();
+    var months = b.getMonth()-a.getMonth();
+    var days = b.getDate()-a.getDate();
+    if (days < 0){
+      months -= 1;
+      var prevMonth = new Date(b.getFullYear(), b.getMonth(), 0).getDate();
+      days += prevMonth;
+    }
+    if (months < 0){ years -= 1; months += 12; }
+    return {years:years, months:months, days:days};
+  }
+
+  var defaultSep = addDays(todayISO(), -122); // ~4 months
+  var defaultRel = (function(){ var d=parseISO(defaultSep); d.setFullYear(d.getFullYear()-4); return isoDate(d); })();
+
+  var state = {
+    settings: { relationshipStart: defaultRel, separationDate: defaultSep },
+    entries: {}
+  };
+
+  // ---- server persistence (replaces the old localStorage-only version) ----
+  async function loadState(){
+    var res = await fetch('/api/state');
+    if (!res.ok) throw new Error('bad response: ' + res.status);
+    var data = await res.json();
+    if (data.settings && data.settings.relationshipStart) state.settings.relationshipStart = data.settings.relationshipStart;
+    if (data.settings && data.settings.separationDate) state.settings.separationDate = data.settings.separationDate;
+    state.entries = data.entries || {};
+  }
+  async function saveEntryToServer(date, entry){
+    var res = await fetch('/api/entries/' + encodeURIComponent(date), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(entry)
+    });
+    if (!res.ok) throw new Error('save failed: ' + res.status);
+  }
+  async function saveSettingsToServer(settings){
+    var res = await fetch('/api/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(settings)
+    });
+    if (!res.ok) throw new Error('save failed: ' + res.status);
+  }
+
+  var EMOTIONS = ['Joy','Calm','Hope','Gratitude','Sadness','Loneliness','Anger','Anxiety','Numbness','Relief'];
+  var MOOD_LABELS = {1:'Light', 2:'Manageable', 3:'Mixed', 4:'Heavy', 5:'Overwhelming'};
+  var PROMPTS = [
+    "What did today ask of you?",
+    "Where did you find a little steadiness today, even for a minute?",
+    "What's one thing you didn't expect to feel this month?",
+    "What do you miss right now — and what are you slowly learning to let go of?",
+    "What would you tell yourself four months ago?",
+    "What's something small that felt like progress?",
+    "What are you carrying into tomorrow?"
+  ];
+
+  var currentDate = todayISO();
+  var draft = { mood:null, emotions:[], text:'', helped:'' };
+
+  var $ = function(id){ return document.getElementById(id); };
+  var els = {
+    entryDateDisplay: $('entry-date-display'),
+    entryPrompt: $('entry-prompt'),
+    moodScale: $('mood-scale'),
+    moodCurrent: $('mood-current'),
+    chips: $('emotion-chips'),
+    text: $('entry-text'),
+    helped: $('entry-helped'),
+    saveBtn: $('save-entry'),
+    copyBtn: $('copy-entry'),
+    saveHint: $('save-hint'),
+    backfillDate: $('backfill-date'),
+    backfillGo: $('backfill-go'),
+    backfillToday: $('backfill-today'),
+    statTogether: $('stat-together'),
+    statApart: $('stat-apart'),
+    statEntries: $('stat-entries'),
+    statStreak: $('stat-streak'),
+    connStatus: $('conn-status'),
+    toggleSettings: $('toggle-settings'),
+    settingsPanel: $('settings-panel'),
+    inRelStart: $('in-rel-start'),
+    inSepDate: $('in-sep-date'),
+    saveSettings: $('save-settings'),
+    cancelSettings: $('cancel-settings'),
+    chartWrap: $('chart-wrap'),
+    chartEmpty: $('chart-empty'),
+    timeline: $('timeline'),
+    searchBox: $('search-box'),
+    toast: $('toast')
+  };
+
+  // build emotion chips
+  EMOTIONS.forEach(function(name){
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.textContent = name;
+    b.addEventListener('click', function(){
+      var idx = draft.emotions.indexOf(name);
+      if (idx === -1) draft.emotions.push(name); else draft.emotions.splice(idx,1);
+      renderChips();
+    });
+    els.chips.appendChild(b);
+  });
+  function renderChips(){
+    Array.prototype.forEach.call(els.chips.children, function(b){
+      b.classList.toggle('selected', draft.emotions.indexOf(b.textContent) !== -1);
+    });
+  }
+
+  Array.prototype.forEach.call(els.moodScale.children, function(dot){
+    dot.addEventListener('click', function(){
+      draft.mood = Number(dot.getAttribute('data-lvl'));
+      renderMood();
+    });
+  });
+  function renderMood(){
+    Array.prototype.forEach.call(els.moodScale.children, function(dot){
+      dot.classList.toggle('selected', Number(dot.getAttribute('data-lvl')) === draft.mood);
+    });
+    els.moodCurrent.innerHTML = draft.mood ? ('<b>'+MOOD_LABELS[draft.mood]+'</b> ('+draft.mood+'/5)') : '';
+  }
+
+  function dayIndexPrompt(iso){
+    var d = parseISO(iso);
+    var start = new Date(d.getFullYear(),0,0);
+    var diff = (d - start) / 86400000;
+    return PROMPTS[Math.floor(diff) % PROMPTS.length];
+  }
+
+  function loadEntryIntoForm(iso){
+    currentDate = iso;
+    var e = state.entries[iso];
+    draft = e ? { mood:e.mood, emotions:(e.emotions||[]).slice(), text:e.text||'', helped:e.helped||'' }
+              : { mood:null, emotions:[], text:'', helped:'' };
+    els.entryDateDisplay.textContent = displayDate(iso);
+    els.entryPrompt.textContent = dayIndexPrompt(iso);
+    els.text.value = draft.text;
+    els.helped.value = draft.helped;
+    renderMood();
+    renderChips();
+    els.copyBtn.style.display = e ? 'inline-block' : 'none';
+    els.saveHint.textContent = e ? 'Last saved ' + (e.updatedDisplay || '') : '';
+    els.backfillToday.style.display = (iso === todayISO()) ? 'none' : 'inline-block';
+  }
+
+  els.saveBtn.addEventListener('click', async function(){
+    draft.text = els.text.value;
+    draft.helped = els.helped.value;
+    if (!draft.mood && !draft.text.trim()){
+      showToast("Pick how the day felt, or write a line, before saving.");
+      return;
+    }
+    var entry = {
+      mood: draft.mood,
+      emotions: draft.emotions.slice(),
+      text: draft.text,
+      helped: draft.helped,
+      updatedDisplay: new Date().toLocaleString(undefined, {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'})
+    };
+    els.saveBtn.disabled = true;
+    try{
+      await saveEntryToServer(currentDate, entry);
+    }catch(e){
+      els.saveBtn.disabled = false;
+      showToast("Couldn't save — the server or database isn't reachable right now.");
+      return;
+    }
+    els.saveBtn.disabled = false;
+    state.entries[currentDate] = entry;
+    els.copyBtn.style.display = 'inline-block';
+    els.saveHint.textContent = 'Saved just now';
+    showToast("Entry saved for " + displayDate(currentDate) + ".");
+    renderStats();
+    renderChart();
+    renderTimeline();
+  });
+
+  function shareText(iso){
+    var e = state.entries[iso];
+    if (!e) return '';
+    var lines = [displayDate(iso)];
+    var moodLine = e.mood ? ('Feeling: ' + MOOD_LABELS[e.mood] + ' (' + e.mood + '/5)') : '';
+    if (e.emotions && e.emotions.length) moodLine += (moodLine?' — ':'') + e.emotions.join(', ');
+    if (moodLine) lines.push(moodLine);
+    lines.push('');
+    if (e.text) lines.push(e.text);
+    if (e.helped) lines.push('', 'What helped: ' + e.helped);
+    return lines.join('\n');
+  }
+
+  function copyToClipboard(text){
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){
+        showToast("Copied — paste it wherever you'd like to share it.");
+      }).catch(function(){ fallbackCopy(text); });
+    } else {
+      fallbackCopy(text);
+    }
+  }
+  function fallbackCopy(text){
+    try{
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast("Copied — paste it wherever you'd like to share it.");
+    }catch(e){
+      showToast("Couldn't copy automatically — select the text and copy manually.");
+    }
+  }
+
+  els.copyBtn.addEventListener('click', function(){ copyToClipboard(shareText(currentDate)); });
+
+  els.backfillGo.addEventListener('click', function(){
+    var v = els.backfillDate.value;
+    if (!v) return;
+    if (v > todayISO()) { showToast("Pick today or an earlier date."); return; }
+    loadEntryIntoForm(v);
+  });
+  els.backfillToday.addEventListener('click', function(){ loadEntryIntoForm(todayISO()); });
+
+  var toastTimer;
+  function showToast(msg){
+    els.toast.textContent = msg;
+    els.toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ els.toast.classList.remove('show'); }, 2600);
+  }
+
+  // settings
+  els.toggleSettings.addEventListener('click', function(){
+    els.inRelStart.value = state.settings.relationshipStart;
+    els.inSepDate.value = state.settings.separationDate;
+    els.settingsPanel.classList.add('open');
+  });
+  els.cancelSettings.addEventListener('click', function(){ els.settingsPanel.classList.remove('open'); });
+  els.saveSettings.addEventListener('click', async function(){
+    var next = {
+      relationshipStart: els.inRelStart.value || state.settings.relationshipStart,
+      separationDate: els.inSepDate.value || state.settings.separationDate
+    };
+    els.saveSettings.disabled = true;
+    try{
+      await saveSettingsToServer(next);
+    }catch(e){
+      els.saveSettings.disabled = false;
+      showToast("Couldn't save those dates — the server or database isn't reachable right now.");
+      return;
+    }
+    els.saveSettings.disabled = false;
+    state.settings = next;
+    els.settingsPanel.classList.remove('open');
+    renderStats();
+    renderChart();
+  });
+
+  function computeStreak(){
+    var cursor = todayISO();
+    if (!state.entries[cursor]) cursor = addDays(cursor, -1);
+    var count = 0;
+    while (state.entries[cursor]){
+      count++;
+      cursor = addDays(cursor, -1);
+    }
+    return count;
+  }
+
+  function renderStats(){
+    var t = monthsBetween(state.settings.relationshipStart, todayISO());
+    els.statTogether.textContent = t.years + 'y ' + t.months + 'm';
+    var a = monthsBetween(state.settings.separationDate, todayISO());
+    els.statApart.textContent = (a.years*12+a.months) + 'mo ' + a.days + 'd';
+    els.statEntries.textContent = Object.keys(state.entries).length;
+    els.statStreak.textContent = computeStreak();
+  }
+
+  // ---- chart ----
+  function renderChart(){
+    var todayI = todayISO();
+    var windowStart = addDays(todayI, -29);
+    var points = [];
+    for (var i=0;i<30;i++){
+      var iso = addDays(windowStart, i);
+      var e = state.entries[iso];
+      points.push({ iso:iso, idx:i, mood: e ? e.mood : null, emotions: e ? (e.emotions||[]) : [] });
+    }
+    var withMood = points.filter(function(p){ return p.mood; });
+    els.chartWrap.innerHTML = '';
+    if (withMood.length < 2){
+      var empty = document.createElement('div');
+      empty.className = 'chart-empty';
+      empty.textContent = "Your trend will appear here once you've journaled a few days.";
+      els.chartWrap.appendChild(empty);
+      return;
+    }
+
+    var W = 680, H = 220, padL = 46, padR = 12, padT = 16, padB = 26;
+    var plotW = W - padL - padR, plotH = H - padT - padB;
+    function xFor(idx){ return padL + (idx/29) * plotW; }
+    function yFor(mood){ return padT + ((5-mood)/4) * plotH; }
+
+    var svgNS = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(svgNS,'svg');
+    svg.setAttribute('viewBox','0 0 '+W+' '+H);
+    svg.setAttribute('class','chart');
+    svg.setAttribute('role','img');
+    svg.setAttribute('aria-label','Mood heaviness over the last 30 days');
+
+    // gridlines + axis labels at mood 1,3,5
+    [1,3,5].forEach(function(m){
+      var y = yFor(m);
+      var line = document.createElementNS(svgNS,'line');
+      line.setAttribute('x1', padL); line.setAttribute('x2', W-padR);
+      line.setAttribute('y1', y); line.setAttribute('y2', y);
+      line.setAttribute('class','chart-grid-line');
+      svg.appendChild(line);
+      var label = document.createElementNS(svgNS,'text');
+      label.setAttribute('x', padL-8); label.setAttribute('y', y+4);
+      label.setAttribute('text-anchor','end');
+      label.setAttribute('class','chart-axis-label');
+      label.textContent = MOOD_LABELS[m];
+      svg.appendChild(label);
+    });
+
+    // x labels every 5 days
+    points.forEach(function(p){
+      if (p.idx % 5 === 0){
+        var lbl = document.createElementNS(svgNS,'text');
+        lbl.setAttribute('x', xFor(p.idx));
+        lbl.setAttribute('y', H-6);
+        lbl.setAttribute('text-anchor', p.idx===0?'start':'middle');
+        lbl.setAttribute('class','chart-axis-label');
+        var d = parseISO(p.iso);
+        lbl.textContent = d.toLocaleDateString(undefined,{month:'short', day:'numeric'});
+        svg.appendChild(lbl);
+      }
+    });
+
+    // build contiguous runs for line + area
+    var runs = [];
+    var cur = [];
+    points.forEach(function(p){
+      if (p.mood){ cur.push(p); }
+      else { if (cur.length) runs.push(cur); cur = []; }
+    });
+    if (cur.length) runs.push(cur);
+
+    runs.forEach(function(run){
+      if (run.length > 1){
+        var d = run.map(function(p,i){ return (i===0?'M':'L') + xFor(p.idx) + ' ' + yFor(p.mood); }).join(' ');
+        var path = document.createElementNS(svgNS,'path');
+        path.setAttribute('d', d);
+        path.setAttribute('class','chart-line');
+        svg.appendChild(path);
+
+        var areaD = d + ' L ' + xFor(run[run.length-1].idx) + ' ' + (padT+plotH) + ' L ' + xFor(run[0].idx) + ' ' + (padT+plotH) + ' Z';
+        var area = document.createElementNS(svgNS,'path');
+        area.setAttribute('d', areaD);
+        area.setAttribute('class','chart-area');
+        svg.insertBefore(area, svg.firstChild);
+      }
+    });
+
+    var hoverLine = document.createElementNS(svgNS,'line');
+    hoverLine.setAttribute('y1', padT); hoverLine.setAttribute('y2', padT+plotH);
+    hoverLine.setAttribute('class','chart-hover-line');
+    svg.appendChild(hoverLine);
+
+    points.forEach(function(p){
+      if (!p.mood) return;
+      var dot = document.createElementNS(svgNS,'circle');
+      dot.setAttribute('cx', xFor(p.idx)); dot.setAttribute('cy', yFor(p.mood));
+      dot.setAttribute('r', 4);
+      dot.setAttribute('class','chart-dot');
+      dot.setAttribute('data-idx', p.idx);
+      svg.appendChild(dot);
+    });
+
+    var wrapDiv = document.createElement('div');
+    wrapDiv.style.position = 'relative';
+    wrapDiv.appendChild(svg);
+    var tooltip = document.createElement('div');
+    tooltip.className = 'tooltip';
+    wrapDiv.appendChild(tooltip);
+    els.chartWrap.appendChild(wrapDiv);
+
+    function showTip(p, clientRect, mouseX){
+      var d = parseISO(p.iso);
+      var label = d.toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric'});
+      var body = '<div style="font-weight:600;margin-bottom:3px;">'+label+'</div>' +
+        MOOD_LABELS[p.mood] + ' (' + p.mood + '/5)' +
+        (p.emotions.length ? '<br>' + p.emotions.join(', ') : '');
+      tooltip.innerHTML = body;
+      tooltip.style.left = mouseX + 'px';
+      tooltip.style.top = (yFor(p.mood) / H * clientRect.height) + 'px';
+      tooltip.style.opacity = '1';
+      hoverLine.style.opacity = '1';
+      hoverLine.setAttribute('x1', xFor(p.idx));
+      hoverLine.setAttribute('x2', xFor(p.idx));
+      Array.prototype.forEach.call(svg.querySelectorAll('.chart-dot'), function(c){
+        c.classList.toggle('hot', Number(c.getAttribute('data-idx')) === p.idx);
+      });
+    }
+    function hideTip(){
+      tooltip.style.opacity = '0';
+      hoverLine.style.opacity = '0';
+      Array.prototype.forEach.call(svg.querySelectorAll('.chart-dot'), function(c){ c.classList.remove('hot'); });
+    }
+    svg.addEventListener('pointermove', function(evt){
+      var rect = svg.getBoundingClientRect();
+      var relX = (evt.clientX - rect.left) / rect.width * W;
+      var idx = Math.round((relX - padL) / plotW * 29);
+      idx = Math.max(0, Math.min(29, idx));
+      var p = points[idx];
+      if (p && p.mood){ showTip(p, rect, (evt.clientX - rect.left)); }
+      else { hideTip(); }
+    });
+    svg.addEventListener('pointerleave', hideTip);
+  }
+
+  // ---- timeline ----
+  function renderTimeline(){
+    var q = (els.searchBox.value||'').trim().toLowerCase();
+    var isos = Object.keys(state.entries).sort().reverse();
+    if (q){
+      isos = isos.filter(function(iso){
+        var e = state.entries[iso];
+        var hay = (e.text||'') + ' ' + (e.helped||'') + ' ' + (e.emotions||[]).join(' ');
+        return hay.toLowerCase().indexOf(q) !== -1;
+      });
+    }
+    els.timeline.innerHTML = '';
+    if (!isos.length){
+      var empty = document.createElement('div');
+      empty.className = 'timeline-empty';
+      empty.textContent = q ? 'No entries match that search.' : "Nothing here yet — today's entry is a good place to start.";
+      els.timeline.appendChild(empty);
+      return;
+    }
+    isos.forEach(function(iso){
+      var e = state.entries[iso];
+      var row = document.createElement('div');
+      row.className = 't-entry';
+
+      var bar = document.createElement('div');
+      bar.className = 't-bar';
+      bar.style.background = e.mood ? ('var(--mood-'+e.mood+')') : 'var(--line-strong)';
+      row.appendChild(bar);
+
+      var body = document.createElement('div');
+      body.className = 't-body';
+
+      var top = document.createElement('div');
+      top.className = 't-top';
+      var d = document.createElement('div'); d.className='t-date'; d.textContent = displayDate(iso);
+      var m = document.createElement('div'); m.className='t-mood'; m.textContent = e.mood ? (MOOD_LABELS[e.mood]+' · '+e.mood+'/5') : '';
+      top.appendChild(d); top.appendChild(m);
+      body.appendChild(top);
+
+      if (e.emotions && e.emotions.length){
+        var tags = document.createElement('div'); tags.className='t-tags'; tags.textContent = e.emotions.join(' · ');
+        body.appendChild(tags);
+      }
+
+      var preview = document.createElement('div'); preview.className='t-preview';
+      preview.textContent = e.text || '';
+      body.appendChild(preview);
+
+      var full = document.createElement('div'); full.className='t-full';
+      full.textContent = e.text || '';
+      body.appendChild(full);
+
+      if (e.helped){
+        var helped = document.createElement('div'); helped.className='t-helped';
+        helped.innerHTML = '<b>What helped:</b> ' + escapeHtml(e.helped);
+        full.appendChild(helped);
+      }
+
+      var actions = document.createElement('div'); actions.className='t-actions';
+      var editBtn = document.createElement('button'); editBtn.className='btn btn-ghost'; editBtn.type='button'; editBtn.textContent='Edit';
+      editBtn.addEventListener('click', function(ev){ ev.stopPropagation(); loadEntryIntoForm(iso); window.scrollTo({top:0, behavior:'smooth'}); });
+      var copyBtn2 = document.createElement('button'); copyBtn2.className='btn btn-ghost'; copyBtn2.type='button'; copyBtn2.textContent='Copy to share';
+      copyBtn2.addEventListener('click', function(ev){ ev.stopPropagation(); copyToClipboard(shareText(iso)); });
+      actions.appendChild(editBtn); actions.appendChild(copyBtn2);
+      full.appendChild(actions);
+
+      body.appendChild(full);
+      row.appendChild(body);
+
+      row.addEventListener('click', function(){ row.classList.toggle('open'); });
+
+      els.timeline.appendChild(row);
+    });
+  }
+  function escapeHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  els.searchBox.addEventListener('input', renderTimeline);
+
+  els.backfillDate.max = todayISO();
+
+  (async function init(){
+    loadEntryIntoForm(todayISO());
+    try{
+      await loadState();
+      els.connStatus.textContent = 'Connected';
+      els.connStatus.classList.remove('err');
+    }catch(e){
+      els.connStatus.textContent = "Can't reach the database — check the server is running.";
+      els.connStatus.classList.add('err');
+    }
+    loadEntryIntoForm(currentDate);
+    renderStats();
+    renderChart();
+    renderTimeline();
+  })();
+})();
+</script>
