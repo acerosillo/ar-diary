@@ -1,0 +1,17 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+# The site has no index.html (the journal is public/steady-ground.html),
+# which is why "/" was 404ing.
+[[redirects]]
+  from = "/"
+  to = "/steady-ground.html"
+  status = 200
+
+# Sends the app's /api/* calls to the serverless function instead of the
+# local Express server it talks to in development.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
