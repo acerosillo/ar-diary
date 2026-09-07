@@ -15,3 +15,9 @@
   from = "/api/*"
   to = "/.netlify/functions/api/:splat"
   status = 200
+
+# Nicer URL for the read-only page you'd hand to someone else.
+[[redirects]]
+  from = "/read"
+  to = "/read.html"
+  status = 200

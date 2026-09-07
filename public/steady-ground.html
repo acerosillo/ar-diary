@@ -155,20 +155,10 @@
 
   .backfill-row{ margin-top:16px; padding-top:16px; border-top:1px dashed var(--line); font-size:0.85rem; color:var(--ink-soft); display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 
-  /* chart */
-  .chart-panel{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:20px 24px 12px; }
-  .chart-empty{ color:var(--ink-faint); font-size:0.9rem; padding:30px 4px; text-align:center; }
-  svg.chart{ width:100%; height:auto; display:block; overflow:visible; }
-  .chart-grid-line{ stroke:var(--line); stroke-width:1; }
-  .chart-axis-label{ fill:var(--ink-faint); font-size:11px; font-family:'IBM Plex Mono', monospace; }
-  .chart-line{ fill:none; stroke:var(--accent); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
-  .chart-area{ fill:var(--accent); opacity:0.08; }
-  .chart-dot{ fill:var(--surface); stroke:var(--accent); stroke-width:2; }
-  .chart-dot.hot{ fill:var(--accent); }
-  .chart-hover-line{ stroke:var(--ink-faint); stroke-width:1; stroke-dasharray:3 3; opacity:0; }
-  .tooltip{ position:absolute; pointer-events:none; background:var(--ink); color:var(--bg); font-size:0.78rem; padding:8px 10px; border-radius:8px; max-width:220px; opacity:0; transform:translate(-50%,-115%); transition:opacity .1s; z-index:5; line-height:1.45; }
-  :root[data-theme="dark"] .tooltip, @media (prefers-color-scheme:dark){ .tooltip{ background:var(--surface-2); color:var(--ink); border:1px solid var(--line-strong); } }
-  .chart-wrap{ position:relative; }
+  .share-field{ margin-bottom:20px; }
+  .share-toggle{ display:flex; align-items:center; gap:10px; font-size:0.88rem; color:var(--ink-soft); cursor:pointer; }
+  .share-toggle input{ width:17px; height:17px; accent-color:var(--accent); cursor:pointer; }
+  .share-toggle .hint{ font-size:0.78rem; color:var(--ink-faint); }
 
   /* timeline */
   .search-row{ margin-bottom:14px; }
@@ -180,6 +170,7 @@
   .t-body{ flex:1; min-width:0; }
   .t-top{ display:flex; justify-content:space-between; gap:10px; align-items:baseline; flex-wrap:wrap; }
   .t-date{ font-size:0.85rem; font-weight:600; }
+  .t-shared-badge{ font-size:0.68rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--accent-deep); background:var(--accent-soft); border-radius:999px; padding:2px 8px; }
   .t-mood{ font-size:0.76rem; color:var(--ink-faint); }
   .t-tags{ font-size:0.76rem; color:var(--accent-deep); margin-top:2px; }
   .t-preview{ font-size:0.88rem; color:var(--ink-soft); margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -189,6 +180,12 @@
   .t-helped{ margin-top:8px; font-size:0.85rem; color:var(--ink-soft); }
   .t-actions{ display:flex; gap:8px; margin-top:10px; }
   .t-actions .btn{ padding:6px 12px; font-size:0.78rem; }
+
+  .pager{ display:flex; justify-content:center; align-items:center; gap:16px; margin-top:18px; }
+  .pager .mono{ font-size:0.8rem; color:var(--ink-faint); }
+  .pager button{ font-family:inherit; font-size:0.85rem; font-weight:600; color:var(--ink); background:transparent; border:1px solid var(--line-strong); border-radius:8px; padding:7px 14px; cursor:pointer; }
+  .pager button:hover:not(:disabled){ border-color:var(--ink-soft); }
+  .pager button:disabled{ opacity:0.4; cursor:not-allowed; }
 
   footer{ margin-top:56px; padding-top:20px; border-top:1px solid var(--line); font-size:0.78rem; color:var(--ink-faint); display:flex; flex-direction:column; gap:6px; }
 
@@ -222,7 +219,10 @@
     </div>
     <div class="ledger-edit-row">
       <span class="conn-status" id="conn-status">Connecting…</span>
-      <button class="link-btn" id="toggle-settings" type="button">Edit dates</button>
+      <span>
+        <a class="link-btn" href="/read" target="_blank" rel="noopener">Shared page ↗</a>
+        <button class="link-btn" id="toggle-settings" type="button">Edit dates</button>
+      </span>
     </div>
     <div class="settings-panel" id="settings-panel">
       <div class="field">
@@ -269,6 +269,13 @@
         <input type="text" id="entry-helped" placeholder="A walk, a song, a call with a friend...">
       </div>
 
+      <div class="share-field">
+        <label class="share-toggle">
+          <input type="checkbox" id="entry-shared">
+          <span>Share this entry <span class="hint">— visible on the read-only page, off by default</span></span>
+        </label>
+      </div>
+
       <div class="entry-actions">
         <button class="btn btn-primary" id="save-entry" type="button">Save entry</button>
         <button class="btn btn-ghost" id="copy-entry" type="button" style="display:none;">Copy to share</button>
@@ -285,24 +292,16 @@
   </section>
 
   <section>
-    <h2>Your last 30 days</h2>
-    <div class="chart-panel">
-      <div class="chart-wrap" id="chart-wrap">
-        <div class="chart-empty" id="chart-empty">Your trend will appear here once you've journaled a few days.</div>
-      </div>
-    </div>
-  </section>
-
-  <section>
     <h2>Entries</h2>
     <div class="search-row">
       <input type="text" id="search-box" placeholder="Search your entries...">
     </div>
     <div id="timeline"></div>
+    <div class="pager" id="pager"></div>
   </section>
 
   <footer>
-    <div>Entries are saved to the database this app is connected to (Turso, or a local file while you're testing) — not to this browser. Nothing is shared beyond that unless you tap "Copy to share."</div>
+    <div>Entries are saved to the database this app is connected to (Turso, or a local file while you're testing) — not to this browser. Nothing is shared beyond that unless you tap "Copy to share," or check "Share this entry" on one, which makes it (and only it) visible on the passcode-protected <a class="link-btn" href="/read" target="_blank" rel="noopener">shared page</a>.</div>
     <div>If it ever feels like too much to hold alone, a therapist or someone you trust can help carry it.</div>
   </footer>
 </div>
@@ -386,7 +385,9 @@
   ];
 
   var currentDate = todayISO();
-  var draft = { mood:null, emotions:[], text:'', helped:'' };
+  var draft = { mood:null, emotions:[], text:'', helped:'', shared:false };
+  var PAGE_SIZE = 5;
+  var currentPage = 1;
 
   var $ = function(id){ return document.getElementById(id); };
   var els = {
@@ -397,6 +398,7 @@
     chips: $('emotion-chips'),
     text: $('entry-text'),
     helped: $('entry-helped'),
+    shared: $('entry-shared'),
     saveBtn: $('save-entry'),
     copyBtn: $('copy-entry'),
     saveHint: $('save-hint'),
@@ -414,9 +416,8 @@
     inSepDate: $('in-sep-date'),
     saveSettings: $('save-settings'),
     cancelSettings: $('cancel-settings'),
-    chartWrap: $('chart-wrap'),
-    chartEmpty: $('chart-empty'),
     timeline: $('timeline'),
+    pager: $('pager'),
     searchBox: $('search-box'),
     toast: $('toast')
   };
@@ -461,12 +462,13 @@
   function loadEntryIntoForm(iso){
     currentDate = iso;
     var e = state.entries[iso];
-    draft = e ? { mood:e.mood, emotions:(e.emotions||[]).slice(), text:e.text||'', helped:e.helped||'' }
-              : { mood:null, emotions:[], text:'', helped:'' };
+    draft = e ? { mood:e.mood, emotions:(e.emotions||[]).slice(), text:e.text||'', helped:e.helped||'', shared:!!e.shared }
+              : { mood:null, emotions:[], text:'', helped:'', shared:false };
     els.entryDateDisplay.textContent = displayDate(iso);
     els.entryPrompt.textContent = dayIndexPrompt(iso);
     els.text.value = draft.text;
     els.helped.value = draft.helped;
+    els.shared.checked = draft.shared;
     renderMood();
     renderChips();
     els.copyBtn.style.display = e ? 'inline-block' : 'none';
@@ -477,6 +479,7 @@
   els.saveBtn.addEventListener('click', async function(){
     draft.text = els.text.value;
     draft.helped = els.helped.value;
+    draft.shared = els.shared.checked;
     if (!draft.mood && !draft.text.trim()){
       showToast("Pick how the day felt, or write a line, before saving.");
       return;
@@ -486,6 +489,7 @@
       emotions: draft.emotions.slice(),
       text: draft.text,
       helped: draft.helped,
+      shared: draft.shared,
       updatedDisplay: new Date().toLocaleString(undefined, {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'})
     };
     els.saveBtn.disabled = true;
@@ -502,7 +506,6 @@
     els.saveHint.textContent = 'Saved just now';
     showToast("Entry saved for " + displayDate(currentDate) + ".");
     renderStats();
-    renderChart();
     renderTimeline();
   });
 
@@ -583,7 +586,6 @@
     state.settings = next;
     els.settingsPanel.classList.remove('open');
     renderStats();
-    renderChart();
   });
 
   function computeStreak(){
@@ -606,150 +608,6 @@
     els.statStreak.textContent = computeStreak();
   }
 
-  // ---- chart ----
-  function renderChart(){
-    var todayI = todayISO();
-    var windowStart = addDays(todayI, -29);
-    var points = [];
-    for (var i=0;i<30;i++){
-      var iso = addDays(windowStart, i);
-      var e = state.entries[iso];
-      points.push({ iso:iso, idx:i, mood: e ? e.mood : null, emotions: e ? (e.emotions||[]) : [] });
-    }
-    var withMood = points.filter(function(p){ return p.mood; });
-    els.chartWrap.innerHTML = '';
-    if (withMood.length < 2){
-      var empty = document.createElement('div');
-      empty.className = 'chart-empty';
-      empty.textContent = "Your trend will appear here once you've journaled a few days.";
-      els.chartWrap.appendChild(empty);
-      return;
-    }
-
-    var W = 680, H = 220, padL = 46, padR = 12, padT = 16, padB = 26;
-    var plotW = W - padL - padR, plotH = H - padT - padB;
-    function xFor(idx){ return padL + (idx/29) * plotW; }
-    function yFor(mood){ return padT + ((5-mood)/4) * plotH; }
-
-    var svgNS = 'http://www.w3.org/2000/svg';
-    var svg = document.createElementNS(svgNS,'svg');
-    svg.setAttribute('viewBox','0 0 '+W+' '+H);
-    svg.setAttribute('class','chart');
-    svg.setAttribute('role','img');
-    svg.setAttribute('aria-label','Mood heaviness over the last 30 days');
-
-    // gridlines + axis labels at mood 1,3,5
-    [1,3,5].forEach(function(m){
-      var y = yFor(m);
-      var line = document.createElementNS(svgNS,'line');
-      line.setAttribute('x1', padL); line.setAttribute('x2', W-padR);
-      line.setAttribute('y1', y); line.setAttribute('y2', y);
-      line.setAttribute('class','chart-grid-line');
-      svg.appendChild(line);
-      var label = document.createElementNS(svgNS,'text');
-      label.setAttribute('x', padL-8); label.setAttribute('y', y+4);
-      label.setAttribute('text-anchor','end');
-      label.setAttribute('class','chart-axis-label');
-      label.textContent = MOOD_LABELS[m];
-      svg.appendChild(label);
-    });
-
-    // x labels every 5 days
-    points.forEach(function(p){
-      if (p.idx % 5 === 0){
-        var lbl = document.createElementNS(svgNS,'text');
-        lbl.setAttribute('x', xFor(p.idx));
-        lbl.setAttribute('y', H-6);
-        lbl.setAttribute('text-anchor', p.idx===0?'start':'middle');
-        lbl.setAttribute('class','chart-axis-label');
-        var d = parseISO(p.iso);
-        lbl.textContent = d.toLocaleDateString(undefined,{month:'short', day:'numeric'});
-        svg.appendChild(lbl);
-      }
-    });
-
-    // build contiguous runs for line + area
-    var runs = [];
-    var cur = [];
-    points.forEach(function(p){
-      if (p.mood){ cur.push(p); }
-      else { if (cur.length) runs.push(cur); cur = []; }
-    });
-    if (cur.length) runs.push(cur);
-
-    runs.forEach(function(run){
-      if (run.length > 1){
-        var d = run.map(function(p,i){ return (i===0?'M':'L') + xFor(p.idx) + ' ' + yFor(p.mood); }).join(' ');
-        var path = document.createElementNS(svgNS,'path');
-        path.setAttribute('d', d);
-        path.setAttribute('class','chart-line');
-        svg.appendChild(path);
-
-        var areaD = d + ' L ' + xFor(run[run.length-1].idx) + ' ' + (padT+plotH) + ' L ' + xFor(run[0].idx) + ' ' + (padT+plotH) + ' Z';
-        var area = document.createElementNS(svgNS,'path');
-        area.setAttribute('d', areaD);
-        area.setAttribute('class','chart-area');
-        svg.insertBefore(area, svg.firstChild);
-      }
-    });
-
-    var hoverLine = document.createElementNS(svgNS,'line');
-    hoverLine.setAttribute('y1', padT); hoverLine.setAttribute('y2', padT+plotH);
-    hoverLine.setAttribute('class','chart-hover-line');
-    svg.appendChild(hoverLine);
-
-    points.forEach(function(p){
-      if (!p.mood) return;
-      var dot = document.createElementNS(svgNS,'circle');
-      dot.setAttribute('cx', xFor(p.idx)); dot.setAttribute('cy', yFor(p.mood));
-      dot.setAttribute('r', 4);
-      dot.setAttribute('class','chart-dot');
-      dot.setAttribute('data-idx', p.idx);
-      svg.appendChild(dot);
-    });
-
-    var wrapDiv = document.createElement('div');
-    wrapDiv.style.position = 'relative';
-    wrapDiv.appendChild(svg);
-    var tooltip = document.createElement('div');
-    tooltip.className = 'tooltip';
-    wrapDiv.appendChild(tooltip);
-    els.chartWrap.appendChild(wrapDiv);
-
-    function showTip(p, clientRect, mouseX){
-      var d = parseISO(p.iso);
-      var label = d.toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric'});
-      var body = '<div style="font-weight:600;margin-bottom:3px;">'+label+'</div>' +
-        MOOD_LABELS[p.mood] + ' (' + p.mood + '/5)' +
-        (p.emotions.length ? '<br>' + p.emotions.join(', ') : '');
-      tooltip.innerHTML = body;
-      tooltip.style.left = mouseX + 'px';
-      tooltip.style.top = (yFor(p.mood) / H * clientRect.height) + 'px';
-      tooltip.style.opacity = '1';
-      hoverLine.style.opacity = '1';
-      hoverLine.setAttribute('x1', xFor(p.idx));
-      hoverLine.setAttribute('x2', xFor(p.idx));
-      Array.prototype.forEach.call(svg.querySelectorAll('.chart-dot'), function(c){
-        c.classList.toggle('hot', Number(c.getAttribute('data-idx')) === p.idx);
-      });
-    }
-    function hideTip(){
-      tooltip.style.opacity = '0';
-      hoverLine.style.opacity = '0';
-      Array.prototype.forEach.call(svg.querySelectorAll('.chart-dot'), function(c){ c.classList.remove('hot'); });
-    }
-    svg.addEventListener('pointermove', function(evt){
-      var rect = svg.getBoundingClientRect();
-      var relX = (evt.clientX - rect.left) / rect.width * W;
-      var idx = Math.round((relX - padL) / plotW * 29);
-      idx = Math.max(0, Math.min(29, idx));
-      var p = points[idx];
-      if (p && p.mood){ showTip(p, rect, (evt.clientX - rect.left)); }
-      else { hideTip(); }
-    });
-    svg.addEventListener('pointerleave', hideTip);
-  }
-
   // ---- timeline ----
   function renderTimeline(){
     var q = (els.searchBox.value||'').trim().toLowerCase();
@@ -762,6 +620,7 @@
       });
     }
     els.timeline.innerHTML = '';
+    els.pager.innerHTML = '';
     if (!isos.length){
       var empty = document.createElement('div');
       empty.className = 'timeline-empty';
@@ -769,7 +628,12 @@
       els.timeline.appendChild(empty);
       return;
     }
-    isos.forEach(function(iso){
+
+    var totalPages = Math.max(1, Math.ceil(isos.length / PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = totalPages;
+    var pageIsos = isos.slice((currentPage-1)*PAGE_SIZE, currentPage*PAGE_SIZE);
+
+    pageIsos.forEach(function(iso){
       var e = state.entries[iso];
       var row = document.createElement('div');
       row.className = 't-entry';
@@ -786,7 +650,12 @@
       top.className = 't-top';
       var d = document.createElement('div'); d.className='t-date'; d.textContent = displayDate(iso);
       var m = document.createElement('div'); m.className='t-mood'; m.textContent = e.mood ? (MOOD_LABELS[e.mood]+' · '+e.mood+'/5') : '';
-      top.appendChild(d); top.appendChild(m);
+      top.appendChild(d);
+      if (e.shared){
+        var badge = document.createElement('span'); badge.className='t-shared-badge'; badge.textContent = 'Shared';
+        top.appendChild(badge);
+      }
+      top.appendChild(m);
       body.appendChild(top);
 
       if (e.emotions && e.emotions.length){
@@ -823,12 +692,32 @@
 
       els.timeline.appendChild(row);
     });
+
+    if (totalPages > 1){
+      var prevBtn = document.createElement('button');
+      prevBtn.type = 'button'; prevBtn.textContent = '← Newer';
+      prevBtn.disabled = currentPage <= 1;
+      prevBtn.addEventListener('click', function(){ currentPage--; renderTimeline(); window.scrollTo({top: els.timeline.offsetTop - 20, behavior:'smooth'}); });
+
+      var pageLabel = document.createElement('span');
+      pageLabel.className = 'mono';
+      pageLabel.textContent = 'Page ' + currentPage + ' of ' + totalPages;
+
+      var nextBtn = document.createElement('button');
+      nextBtn.type = 'button'; nextBtn.textContent = 'Older →';
+      nextBtn.disabled = currentPage >= totalPages;
+      nextBtn.addEventListener('click', function(){ currentPage++; renderTimeline(); window.scrollTo({top: els.timeline.offsetTop - 20, behavior:'smooth'}); });
+
+      els.pager.appendChild(prevBtn);
+      els.pager.appendChild(pageLabel);
+      els.pager.appendChild(nextBtn);
+    }
   }
   function escapeHtml(s){
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  els.searchBox.addEventListener('input', renderTimeline);
+  els.searchBox.addEventListener('input', function(){ currentPage = 1; renderTimeline(); });
 
   els.backfillDate.max = todayISO();
 
@@ -844,7 +733,6 @@
     }
     loadEntryIntoForm(currentDate);
     renderStats();
-    renderChart();
     renderTimeline();
   })();
 })();

@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Shared Entries</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg: #eef1ee;
+    --surface: #ffffff;
+    --surface-2: #f5f6f3;
+    --ink: #202623;
+    --ink-soft: #5b655f;
+    --ink-faint: #8b948e;
+    --line: #dde1dc;
+    --line-strong: #c7ccc5;
+    --accent: #3f6e63;
+    --accent-deep: #294a41;
+    --accent-soft: #d9e6e0;
+    --accent-ink: #ffffff;
+    --mood-1: #dbe8e2;
+    --mood-2: #aecdc0;
+    --mood-3: #7bab99;
+    --mood-4: #3f6e63;
+    --mood-5: #22423a;
+    --err: #b5533f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #14181a; --surface: #1b2124; --surface-2: #20272a;
+      --ink: #e7ece9; --ink-soft: #a2ada6; --ink-faint: #6d7873;
+      --line: #2b3335; --line-strong: #3a4345;
+      --accent: #6ba896; --accent-deep: #8fc4b2; --accent-soft: #24352f; --accent-ink: #0f1513;
+      --mood-1: #232d29; --mood-2: #32463d; --mood-3: #446f60; --mood-4: #6ba896; --mood-5: #a3d8c4;
+      --err: #e0917f;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #14181a; --surface: #1b2124; --surface-2: #20272a;
+    --ink: #e7ece9; --ink-soft: #a2ada6; --ink-faint: #6d7873;
+    --line: #2b3335; --line-strong: #3a4345;
+    --accent: #6ba896; --accent-deep: #8fc4b2; --accent-soft: #24352f; --accent-ink: #0f1513;
+    --mood-1: #232d29; --mood-2: #32463d; --mood-3: #446f60; --mood-4: #6ba896; --mood-5: #a3d8c4;
+    --err: #e0917f;
+  }
+
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:'Public Sans', system-ui, sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased; }
+  h1,h2{ font-family:'Fraunces', Georgia, serif; margin:0; text-wrap:balance; }
+  .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric:tabular-nums; }
+  .wrap{ max-width:640px; margin:0 auto; padding:48px 24px 80px; }
+
+  .gate{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:32px 28px; margin-top:60px; text-align:center; }
+  .gate h1{ font-size:1.5rem; font-weight:500; margin-bottom:10px; }
+  .gate p{ color:var(--ink-soft); font-size:0.92rem; margin:0 0 22px; }
+  .gate form{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  .gate input[type="password"]{
+    font-family:inherit; font-size:0.95rem; padding:10px 14px; border-radius:8px;
+    border:1px solid var(--line-strong); background:var(--surface); color:var(--ink); min-width:200px;
+  }
+  .btn{ font-family:inherit; font-size:0.9rem; font-weight:600; border-radius:8px; padding:10px 18px; cursor:pointer; border:1px solid transparent; background:var(--accent); color:var(--accent-ink); }
+  .btn:hover{ background:var(--accent-deep); }
+  .btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  .gate-error{ color:var(--err); font-size:0.85rem; margin-top:14px; min-height:1.2em; }
+
+  header.top{ margin-bottom:32px; }
+  header.top h1{ font-size:1.7rem; font-weight:500; }
+  header.top p{ color:var(--ink-faint); font-size:0.85rem; margin-top:6px; }
+
+  .entry{ background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:20px 22px; margin-bottom:16px; }
+  .entry-top{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:4px; }
+  .entry-date{ font-family:'Fraunces', Georgia, serif; font-style:italic; font-size:1.15rem; }
+  .entry-mood{ font-size:0.78rem; color:var(--ink-faint); }
+  .entry-tags{ font-size:0.78rem; color:var(--accent-deep); margin-bottom:10px; }
+  .entry-text{ font-size:0.96rem; white-space:pre-wrap; line-height:1.65; }
+  .entry-helped{ margin-top:10px; font-size:0.85rem; color:var(--ink-soft); }
+
+  .empty{ color:var(--ink-faint); font-size:0.92rem; text-align:center; padding:40px 4px; border:1px dashed var(--line); border-radius:12px; }
+
+  .pager{ display:flex; justify-content:center; align-items:center; gap:16px; margin-top:8px; }
+  .pager .mono{ font-size:0.8rem; color:var(--ink-faint); }
+  .pager button{ font-family:inherit; font-size:0.85rem; font-weight:600; color:var(--ink); background:transparent; border:1px solid var(--line-strong); border-radius:8px; padding:7px 14px; cursor:pointer; }
+  .pager button:disabled{ opacity:0.4; cursor:not-allowed; }
+
+  [hidden]{ display:none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="gate" id="gate">
+    <h1>This journal is private</h1>
+    <p>Enter the passcode you were given to read what's been shared with you.</p>
+    <form id="gate-form">
+      <input type="password" id="gate-input" placeholder="Passcode" autocomplete="off">
+      <button class="btn" type="submit" id="gate-submit">View entries</button>
+    </form>
+    <div class="gate-error" id="gate-error"></div>
+  </div>
+
+  <div id="app" hidden>
+    <header class="top">
+      <h1>Shared with you</h1>
+      <p>Entries marked to share, newest first.</p>
+    </header>
+    <div id="list"></div>
+    <div class="pager" id="pager"></div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var PAGE_SIZE = 5;
+  var currentPage = 1;
+  var entries = [];
+  var SESSION_KEY = 'steady-ground-shared-passcode';
+
+  var $ = function(id){ return document.getElementById(id); };
+  var els = {
+    gate: $('gate'),
+    gateForm: $('gate-form'),
+    gateInput: $('gate-input'),
+    gateSubmit: $('gate-submit'),
+    gateError: $('gate-error'),
+    app: $('app'),
+    list: $('list'),
+    pager: $('pager')
+  };
+
+  var MOOD_LABELS = {1:'Light', 2:'Manageable', 3:'Mixed', 4:'Heavy', 5:'Overwhelming'};
+
+  function pad(n){ return n<10 ? '0'+n : ''+n; }
+  function parseISO(iso){ var p=iso.split('-').map(Number); return new Date(p[0], p[1]-1, p[2]); }
+  function displayDate(iso){
+    return parseISO(iso).toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+  }
+  function escapeHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  async function tryLoad(passcode){
+    var res = await fetch('/api/shared', { headers: { 'X-Passcode': passcode } });
+    if (!res.ok){
+      var body = await res.json().catch(function(){ return {}; });
+      var err = new Error(body.error || ('HTTP ' + res.status));
+      err.status = res.status;
+      throw err;
+    }
+    var data = await res.json();
+    return data.entries || [];
+  }
+
+  function showApp(){
+    els.gate.hidden = true;
+    els.app.hidden = false;
+  }
+
+  function render(){
+    els.list.innerHTML = '';
+    els.pager.innerHTML = '';
+    if (!entries.length){
+      var empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.textContent = "Nothing has been shared yet.";
+      els.list.appendChild(empty);
+      return;
+    }
+    var totalPages = Math.max(1, Math.ceil(entries.length / PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = totalPages;
+    var page = entries.slice((currentPage-1)*PAGE_SIZE, currentPage*PAGE_SIZE);
+
+    page.forEach(function(e){
+      var card = document.createElement('div');
+      card.className = 'entry';
+
+      var top = document.createElement('div');
+      top.className = 'entry-top';
+      var d = document.createElement('div'); d.className = 'entry-date'; d.textContent = displayDate(e.date);
+      var m = document.createElement('div'); m.className = 'entry-mood mono';
+      m.textContent = e.mood ? (MOOD_LABELS[e.mood] + ' · ' + e.mood + '/5') : '';
+      top.appendChild(d); top.appendChild(m);
+      card.appendChild(top);
+
+      if (e.emotions && e.emotions.length){
+        var tags = document.createElement('div'); tags.className = 'entry-tags';
+        tags.textContent = e.emotions.join(' · ');
+        card.appendChild(tags);
+      }
+
+      var text = document.createElement('div'); text.className = 'entry-text';
+      text.textContent = e.text || '';
+      card.appendChild(text);
+
+      if (e.helped){
+        var helped = document.createElement('div'); helped.className = 'entry-helped';
+        helped.innerHTML = '<b>What helped:</b> ' + escapeHtml(e.helped);
+        card.appendChild(helped);
+      }
+
+      els.list.appendChild(card);
+    });
+
+    if (totalPages > 1){
+      var prevBtn = document.createElement('button');
+      prevBtn.type = 'button'; prevBtn.textContent = '← Newer';
+      prevBtn.disabled = currentPage <= 1;
+      prevBtn.addEventListener('click', function(){ currentPage--; render(); window.scrollTo({top:0, behavior:'smooth'}); });
+
+      var label = document.createElement('span');
+      label.className = 'mono';
+      label.textContent = 'Page ' + currentPage + ' of ' + totalPages;
+
+      var nextBtn = document.createElement('button');
+      nextBtn.type = 'button'; nextBtn.textContent = 'Older →';
+      nextBtn.disabled = currentPage >= totalPages;
+      nextBtn.addEventListener('click', function(){ currentPage++; render(); window.scrollTo({top:0, behavior:'smooth'}); });
+
+      els.pager.appendChild(prevBtn);
+      els.pager.appendChild(label);
+      els.pager.appendChild(nextBtn);
+    }
+  }
+
+  async function attempt(passcode, remember){
+    els.gateSubmit.disabled = true;
+    els.gateError.textContent = '';
+    try{
+      entries = await tryLoad(passcode);
+      if (remember){
+        try{ sessionStorage.setItem(SESSION_KEY, passcode); }catch(e){ /* private browsing or blocked — fine, just re-ask next time */ }
+      }
+      showApp();
+      render();
+    }catch(e){
+      els.gateSubmit.disabled = false;
+      if (e.status === 401){
+        els.gateError.textContent = "That passcode isn't right — try again.";
+      } else {
+        els.gateError.textContent = "Couldn't load entries — the server may not be reachable right now.";
+      }
+      try{ sessionStorage.removeItem(SESSION_KEY); }catch(err){}
+    }
+  }
+
+  els.gateForm.addEventListener('submit', function(ev){
+    ev.preventDefault();
+    var passcode = els.gateInput.value;
+    if (!passcode) return;
+    attempt(passcode, true);
+  });
+
+  // If this browser already entered the right passcode earlier this
+  // session, skip straight to the entries.
+  (function(){
+    var saved;
+    try{ saved = sessionStorage.getItem(SESSION_KEY); }catch(e){ saved = null; }
+    if (saved) attempt(saved, false);
+  })();
+})();
+</script>
+</body>
+</html>
